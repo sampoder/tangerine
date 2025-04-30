@@ -1,136 +1,307 @@
 import Head from "next/head";
-import Draggable from 'react-draggable';
-import { useRef, useState } from 'react';
-import { Old_Standard_TT } from 'next/font/google'
+import Draggable from "react-draggable";
+import { useRef, useState } from "react";
+import { Old_Standard_TT, IBM_Plex_Mono } from "next/font/google";
 
 const oldStandardTT = Old_Standard_TT({
-  subsets: ['latin'],
-  weight: ['400', '700'],
-  style: ['normal', 'italic'],
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  style: ["normal", "italic"],
 });
 
-function Node({ label, index, nodes, setNodes }) {
-  const draggableRef = useRef()
-  
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  style: ["normal", "italic"],
+});
+
+function Node({
+  label,
+  index,
+  nodes,
+  setNodes,
+  selectedNode,
+  setSelectedNode,
+}) {
+  const draggableRef = useRef();
+
   let eventLogger = (e, data) => {
     let newNodes = nodes.slice();
     newNodes[index] = {
       ...newNodes[index],
-      position: [data.x, data.y]
-    }
-    setNodes(newNodes)
+      position: [data.x, data.y],
+    };
+    setNodes(newNodes);
   };
-  
+
   return (
-    <Draggable 
+    <Draggable
       nodeRef={draggableRef}
       grid={[25, 25]}
-      bounds={{ left: 0, top: 0, right: 560, bottom: 360}}
       onStart={eventLogger}
       onDrag={eventLogger}
       onStop={eventLogger}
       key={`node_${index}`}
+      bounds="parent"
     >
-      <div ref={draggableRef} style={{
-        width: '40px',
-        height: '40px',
-        border: '1px solid black',
-        borderRadius: '999px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        background: "white",
-        zIndex: 1
-      }}>{label}</div>
+      <div
+        ref={draggableRef}
+        onClick={() => setSelectedNode(index)}
+        style={{
+          width: "60px",
+          height: "60px",
+          borderRadius: "999px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          position: "absolute",
+          top: 8,
+          left: 8,
+          background: "white",
+          boxSizing: "border-box",
+          border:
+            selectedNode == index ? "2px solid #338eda" : "1px solid black",
+          zIndex: 1,
+          cursor: "pointer",
+        }}
+      >
+        {label}
+      </div>
     </Draggable>
-  )
+  );
 }
 
-function Edge({nodes, startNode, endNode}){
-  if(nodes[startNode].position[0] == nodes[endNode].position[0]) {
-    let height = Math.abs(nodes[startNode].position[1] - nodes[endNode].position[1])
+function Edge({ nodes, startNode, endNode }) {
+  if (nodes[startNode].position[0] == nodes[endNode].position[0]) {
+    let height = Math.abs(
+      nodes[startNode].position[1] - nodes[endNode].position[1],
+    );
     return (
-      <div style={{
-        position: 'absolute',
-        left: `${nodes[startNode].position[0] + 20}px`,
-        top: `${(nodes[startNode].position[1] > nodes[endNode].position[1] ? nodes[endNode].position[1] : nodes[startNode].position[1]) + 20}px`,
-        height: `${height}px`,
-        borderLeft: '1px solid black',
-        zIndex: 0
-      }} />
-    )
+      <div
+        style={{
+          position: "absolute",
+          left: `${nodes[startNode].position[0] + 30}px`,
+          top: `${(nodes[startNode].position[1] > nodes[endNode].position[1] ? nodes[endNode].position[1] : nodes[startNode].position[1]) + 30}px`,
+          height: `${height}px`,
+          borderLeft: "1px solid black",
+          zIndex: 0,
+        }}
+      />
+    );
   }
-  
-  
-  let leftNode = nodes[startNode].position[0] >= nodes[endNode].position[0] ? endNode : startNode
-  let rightNode = nodes[startNode].position[0] >= nodes[endNode].position[0] ? startNode : endNode
-  let width = Math.abs(nodes[leftNode].position[0] - nodes[rightNode].position[0])
-  let height = Math.abs(nodes[leftNode].position[1] - nodes[rightNode].position[1])
-  let hyptonuse = Math.sqrt(
-    Math.pow(width, 2) +
-    Math.pow(height, 2)
-  )
+
+  let leftNode =
+    nodes[startNode].position[0] >= nodes[endNode].position[0]
+      ? endNode
+      : startNode;
+  let rightNode =
+    nodes[startNode].position[0] >= nodes[endNode].position[0]
+      ? startNode
+      : endNode;
+  let width = Math.abs(
+    nodes[leftNode].position[0] - nodes[rightNode].position[0],
+  );
+  let height = Math.abs(
+    nodes[leftNode].position[1] - nodes[rightNode].position[1],
+  );
+  let hyptonuse = Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2));
   let angle = Math.acos(
-    (Math.pow(hyptonuse, 2) + Math.pow(width, 2) - Math.pow(height, 2)) 
-    / (2 * hyptonuse * width)
-  )
-  let rotationModifier = nodes[leftNode].position[1] >= nodes[rightNode].position[1] ? -1 : 1
+    (Math.pow(hyptonuse, 2) + Math.pow(width, 2) - Math.pow(height, 2)) /
+      (2 * hyptonuse * width),
+  );
+  let rotationModifier =
+    nodes[leftNode].position[1] >= nodes[rightNode].position[1] ? -1 : 1;
   return (
-    <div style={{
-      position: 'absolute',
-      left: `${nodes[leftNode].position[0] + 20}px`,
-      top: `${nodes[leftNode].position[1] + 20}px`,
-      width: `${hyptonuse}px`,
-      borderTop: '1px solid black',
-      zIndex: 0,
-      transformOrigin: 'top left',
-      transform: `rotate(${rotationModifier * angle}rad)`
-    }} />
-  )
+    <div
+      style={{
+        position: "absolute",
+        left: `${nodes[leftNode].position[0] + 30}px`,
+        top: `${nodes[leftNode].position[1] + 30}px`,
+        width: `${hyptonuse}px`,
+        borderTop: "1px solid black",
+        zIndex: 0,
+        transformOrigin: "top left",
+        transform: `rotate(${rotationModifier * angle}rad)`,
+      }}
+    />
+  );
 }
 
 export default function Home() {
-  const [nodes, setNodes] = useState([])
-  const [edgeInput, setEdgeInput] = useState("")
+  const [nodes, setNodes] = useState([]);
+  const [edgeInput, setEdgeInput] = useState("");
+  const [selectedNode, setSelectedNode] = useState(null);
+
   function edges() {
-    return edgeInput.split("\n")
-      .map(
-        edge => 
-          edge.trim()
-              .split(",")
-              .map(n => n.trim())
-      
+    return edgeInput
+      .split("\n")
+      .map((edge) =>
+        edge
+          .trim()
+          .split(",")
+          .map((n) => n.trim()),
       )
-      .filter((edge) => edge[0] && edge[1] && parseInt(edge[0]) < nodes.length && parseInt(edge[1]) < nodes.length)
+      .filter(
+        (edge) =>
+          edge[0] &&
+          edge[1] &&
+          parseInt(edge[0]) < nodes.length &&
+          parseInt(edge[1]) < nodes.length,
+      );
   }
+
   return (
     <>
       <Head>
-        <title>Create Next App</title>
+        <title>Tangerine</title>
         <meta name="description" content="Generated by create next app" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
+        <link
+          rel="icon"
+          href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍊</text></svg>"
+        />
       </Head>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100vh',
-        flexDirection: 'column'
-      }}>
-        <div className={oldStandardTT.className} style={{ width: '600px', height: '400px', border: '1px solid black', position: 'relative'}}>
-          {nodes.map((node, index) => (<Node label={node.label} index={index} nodes={nodes} setNodes={setNodes} />))}
-          {edges().map(edge => <Edge nodes={nodes} startNode={edge[0]} endNode={edge[1]} />)}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100vh",
+          flexDirection: "column",
+          fontSize: "24px",
+        }}
+      >
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "2fr 1fr",
+            gap: "24px",
+          }}
+        >
+          <div
+            className={oldStandardTT.className}
+            style={{
+              width: "60vw",
+              height: "40vw",
+              border: "2px solid black",
+              position: "relative",
+              borderRadius: "8px",
+            }}
+          >
+            {nodes.map((node, index) => (
+              <Node
+                label={node.label}
+                index={index}
+                nodes={nodes}
+                setNodes={setNodes}
+                selectedNode={selectedNode}
+                setSelectedNode={setSelectedNode}
+              />
+            ))}
+            {edges().map((edge) => (
+              <Edge nodes={nodes} startNode={edge[0]} endNode={edge[1]} />
+            ))}
+            <div
+              onClick={() =>
+                setNodes([...nodes, { label: nodes.length, position: [0, 0] }])
+              }
+              style={{
+                width: "60px",
+                height: "60px",
+                borderRadius: "999px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                position: "absolute",
+                bottom: 16,
+                right: 16,
+                background: "white",
+                boxSizing: "border-box",
+                border: "2px solid currentColor",
+                fontWeight: 700,
+                zIndex: 1,
+                cursor: "pointer",
+              }}
+              className="add"
+            >
+              +
+            </div>
+          </div>
+          <div
+            style={{ border: "2px solid black", borderRadius: "8px" }}
+            className={ibmPlexMono.className}
+          >
+            <div
+              style={{
+                background: "#e0e6ed",
+                padding: "16px",
+                fontWeight: 800,
+                borderTopLeftRadius: "8px",
+                borderTopRightRadius: "8px",
+              }}
+            >
+              {selectedNode == null
+                ? "Select a node to edit..."
+                : `Edit Node #${selectedNode}`}
+            </div>
+            <div style={{ padding: "8px 16px", paddingBottom: "0px" }}>
+            <small><i>Select nodes to create edges to</i></small>
+            </div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(8, 1fr)",
+                padding: "16px",
+                gap: "16px",
+              }}
+            >
+              {selectedNode == null ? (
+                <></>
+              ) : (
+                nodes.map((node, index) => index == selectedNode ? <></> : (
+                  <div
+                    style={{
+                      border: "1px solid black",
+                      height: "40px",
+                      width: "40px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      boxSizing: "border-box",
+                      background: edgeInput.includes(`${index}, ${selectedNode}`) || edgeInput.includes(`${selectedNode}, ${index}`) ? "#5bc0de" : "white",
+                    }}
+                    onClick={() => {
+                      // THIS NEEDS TO BE REWRITTEN, THIS IS BAD, THIS SHOULD NOT BE STORED AS A STRING
+                      let replaced = false
+                      if(edgeInput.includes(`${selectedNode}, ${index}`)) {
+                        replaced = true
+                        setEdgeInput(edgeInput.replaceAll(`${selectedNode}, ${index}`, ""))
+                      }
+                      if(edgeInput.includes(`${index}, ${selectedNode}`)) {
+                        replaced = true
+                        setEdgeInput(edgeInput.replaceAll(`${index}, ${selectedNode}`, ""))
+                      }
+                      if(replaced == false) {
+                        setEdgeInput(edgeInput + '\n' + `${selectedNode}, ${index}`)
+                      }
+                      
+                    }}
+                  >
+                    {index}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
-        <button onClick={() => setNodes([...nodes, { label: nodes.length, position: [0, 0] }])}>
-          Add node
-        </button>
-        <textarea onChange={(e) => setEdgeInput(e.target.value)} value={edgeInput} />
-        <div>{JSON.stringify(nodes)}</div>
       </div>
+      <style jsx>
+        {`
+          .add:hover {
+            background: #5bc0de !important;
+          }
+        `}
+      </style>
     </>
   );
 }
