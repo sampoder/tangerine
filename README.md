@@ -14,8 +14,12 @@ Final Project by Sam Poder, Teresa Luo, and Rebecca Dang for [UC Berkeley's CS 2
 
 ## Development
 
-1. Run `yarn build` to build the website
-2. Run `yarn start` to start the development server, then navigate to localhost:3000 to preview the app
+Run `yarn dev` to run the development server and enable hot reloading, then navigate to localhost:3000 to preview the app
+
+## Deployment
+
+1. Run `yarn build` to create the optimized production build
+2. Run `yarn start` to start the development server
 
 ## Usage
 
