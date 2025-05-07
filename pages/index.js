@@ -244,24 +244,29 @@ function Edge({
 function GeneratedCode({ nodes, edges, language }) {
   // TODO copy button?
   // TODO language radio button or drop down?
-  // TODO how to deal with positioning?
   // TODO deletion errors
-  // TODO directed vs undirected
 
   console.log(nodes);
   console.log(edges);
 
   function getTypstNodes(nodes) {
-    // TODO fix coordinate scaling
-    return nodes.map((node) => `node(pos: (${node.position[0]}, ${node.position[1]}), label: "${node.label}", name: <${node.label}>)`).join(",\n");
+    const scaleFactor = 100;
+    return nodes.map((node) => `node(pos: (${node.position[0] / scaleFactor}, ${node.position[1] / scaleFactor}), label: "${node.label}", name: <${node.label}>)`).join(",\n    ");
   }
 
-  function getTypstEdges(nodes, edges, directed) {
+  function getTypstDirectionString(edge) {
+    if (edge.direction === undefined) {
+      return "-";
+    }
+    // TODO assume that edges are "undirected" or "directed"
+    return edge.direction === "undirected" ? "-" : "->";
+  }
+
+  function getTypstEdges(nodes, edges) {
     if (nodes.length == 0 || edges.length == 0) {
       return "";
     }
-    const direction = directed ? "->" : "-";
-    return edges.map((edge) => `edge(<${nodes[edge.start].label}>, <${nodes[edge.end].label}>, "${direction}")`).join(",\n");
+    return edges.map((edge) => `edge(<${nodes[edge.start].label}>, <${nodes[edge.end].label}>, "${getTypstDirectionString(edge)}")`).join(",\n    ");
   }
 
   function generateCode(nodes, edges, language) {
@@ -270,15 +275,25 @@ function GeneratedCode({ nodes, edges, language }) {
     }
 
     if (language === "typst") {
-      // TODO fix indentation/newlines
+      let nodesString = getTypstNodes(nodes);
+      let edgesString = "";
+
+      if (nodesString !== "") {
+        edgesString = getTypstEdges(nodes, edges, false);
+      }
+
+      if (edgesString !== "") {
+        nodesString += ",\n";
+      }
+
       return (
         `#import "@preview/fletcher:0.5.7" as fletcher: diagram, node, edge\n` +
         `#set page(width: auto, height: auto, margin: 5mm, fill: white)\n` +
         `#diagram(\n` +
-        `    axes: (ltr, btt), // coordinates are (x, y) \n` +
         `    node-stroke: 0.5pt, // node circle thickness\n` +
-        `    ${getTypstNodes(nodes)},\n` +
-        `    ${getTypstEdges(nodes, edges, false)}\n` +
+        `    ${nodesString}` +
+        `    ${edgesString}` +
+        `\n` +
         `)`
       );
     } else {
