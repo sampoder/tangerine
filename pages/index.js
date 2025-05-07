@@ -251,15 +251,17 @@ function GeneratedCode({ nodes, edges, language }) {
   console.log(nodes);
   console.log(edges);
 
-  console.log(getNodeLabels(nodes));
-  console.log(getEdgeList(edges));
-
-  function getNodeLabels(nodes) {
-    return nodes.map((node) => `"${node.label}"`).join(", ");
+  function getTypstNodes(nodes) {
+    // TODO fix coordinate scaling
+    return nodes.map((node) => `node(pos: (${node.position[0]}, ${node.position[1]}), label: "${node.label}", name: <${node.label}>)`).join(",\n");
   }
 
-  function getEdgeList(edges) {
-    return edges.map((edge) => `(${edge.start}, ${edge.end})`).join(", ");
+  function getTypstEdges(nodes, edges, directed) {
+    if (nodes.length == 0 || edges.length == 0) {
+      return "";
+    }
+    const direction = directed ? "->" : "-";
+    return edges.map((edge) => `edge(<${nodes[edge.start].label}>, <${nodes[edge.end].label}>, "${direction}")`).join(",\n");
   }
 
   function generateCode(nodes, edges, language) {
@@ -268,27 +270,16 @@ function GeneratedCode({ nodes, edges, language }) {
     }
 
     if (language === "typst") {
-      // Template from https://typst.app/universe/package/fletcher/
-
-      const nodesString = `#let nodes = (${getNodeLabels(nodes)})`;
-      const edgesString = `#let edges = (${getEdgeList(edges)})`;
-
+      // TODO fix indentation/newlines
       return (
-        `#import "@preview/fletcher:0.5.7" as fletcher: diagram, node, edge, shapes\n` +
+        `#import "@preview/fletcher:0.5.7" as fletcher: diagram, node, edge\n` +
         `#set page(width: auto, height: auto, margin: 5mm, fill: white)\n` +
-        `${nodes.length > 0 ? nodesString : ``}\n` +
-        `${edges.length > 0 ? edgesString : ``}\n` +
-        `#diagram({\n` +
-        `  for (i, n) in nodes.enumerate() {\n` +
-        `    let θ = 90deg - i*360deg/nodes.len()\n` +
-        `    node((θ, 18mm), n, stroke: 0.5pt, name: str(i))\n` +
-        `  }\n` +
-        `  for (from, to) in edges {\n` +
-        `    let bend = if (to, from) in edges { 10deg } else { 0deg }\n` +
-        `    // refer to nodes by label, e.g., <1>\n` +
-        `    edge(label(str(from)), label(str(to)), "-|>", bend: bend)\n` +
-        `  }\n` +
-        `})`
+        `#diagram(\n` +
+        `    axes: (ltr, btt), // coordinates are (x, y) \n` +
+        `    node-stroke: 0.5pt, // node circle thickness\n` +
+        `    ${getTypstNodes(nodes)},\n` +
+        `    ${getTypstEdges(nodes, edges, false)}\n` +
+        `)`
       );
     } else {
       return "Language not supported";
