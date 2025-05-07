@@ -22,6 +22,7 @@ function Node({
   setNodes,
   selectedNode,
   setSelectedNode,
+  setSelectedEdge,
 }) {
   const draggableRef = useRef();
 
@@ -46,7 +47,11 @@ function Node({
     >
       <div
         ref={draggableRef}
-        onClick={() => setSelectedNode(index)}
+        onClick={() => {
+          setSelectedNode(index);
+          setSelectedEdge(null);
+        }}
+        id={`node_${index}`}
         style={{
           width: "60px",
           height: "60px",
@@ -69,7 +74,17 @@ function Node({
   );
 }
 
-function Edge({ nodes, startNode, endNode }) {
+function Edge({
+  nodes,
+  startNode,
+  endNode,
+  setEdges,
+  selectedEdge,
+  setSelectedEdge,
+  setSelectedNode,
+  index,
+  direction,
+}) {
   if (nodes[startNode].position[0] == nodes[endNode].position[0]) {
     let height = Math.abs(
       nodes[startNode].position[1] - nodes[endNode].position[1],
@@ -81,10 +96,64 @@ function Edge({ nodes, startNode, endNode }) {
           left: `${nodes[startNode].position[0] + 30}px`,
           top: `${(nodes[startNode].position[1] > nodes[endNode].position[1] ? nodes[endNode].position[1] : nodes[startNode].position[1]) + 30}px`,
           height: `${height}px`,
-          borderLeft: "1px solid black",
+          borderLeft:
+            selectedEdge == index ? "2px solid #338eda" : "1px solid black",
           zIndex: 0,
+          display: "flex",
+          alignItems: "center",
+          fontWeight: 800,
+          alignItems:
+            (direction == "start_to_end" &&
+              nodes[startNode].position[1] > nodes[endNode].position[1]) ||
+            (direction == "end_to_start" &&
+              nodes[endNode].position[1] > nodes[startNode].position[1])
+              ? "flex-start"
+              : "flex-end",
         }}
-      />
+        onClick={() => {
+          if (selectedEdge == index) {
+            setSelectedEdge(null);
+          } else {
+            setSelectedEdge(index);
+          }
+          setSelectedNode(null);
+        }}
+      >
+        <span
+          style={{
+            display: "inline-block",
+            transform: `rotate(90deg) translateY(12px) ${(direction == "start_to_end" && nodes[startNode].position[1] > nodes[endNode].position[1]) || (direction == "end_to_start" && nodes[endNode].position[1] > nodes[startNode].position[1]) ? "translateX(32px)" : "translateX(-32px)"}`,
+          }}
+        >
+          {direction == "start_to_end"
+            ? nodes[startNode].position[1] > nodes[endNode].position[1]
+              ? "<"
+              : ">"
+            : direction == "end_to_start"
+              ? nodes[startNode].position[1] > nodes[endNode].position[1]
+                ? ">"
+                : "<"
+              : ""}
+        </span>
+        {direction == "bidirectional" && (
+          <>
+            <div
+              style={{
+                position: "absolute",
+                top: "32px",
+                transform: "rotate(90deg) translateY(12px)",
+              }}
+            >{`<`}</div>
+            <div
+              style={{
+                position: "absolute",
+                bottom: "32px",
+                transform: "rotate(90deg) translateY(12px)",
+              }}
+            >{`>`}</div>
+          </>
+        )}
+      </div>
     );
   }
 
@@ -116,12 +185,59 @@ function Edge({ nodes, startNode, endNode }) {
         left: `${nodes[leftNode].position[0] + 30}px`,
         top: `${nodes[leftNode].position[1] + 30}px`,
         width: `${hyptonuse}px`,
-        borderTop: "1px solid black",
+        borderTop:
+          selectedEdge == index ? "2px solid #338eda" : "1px solid black",
         zIndex: 0,
         transformOrigin: "top left",
         transform: `rotate(${rotationModifier * angle}rad)`,
+        display: "flex",
+        alignItems: "center",
+        padding: "0px 32px",
+        boxSizing: "border-box",
+        fontWeight: 800,
+        justifyContent:
+          direction == "start_to_end"
+            ? leftNode == startNode
+              ? "flex-end"
+              : "flex-start"
+            : direction == "end_to_start"
+              ? leftNode == startNode
+                ? "flex-start"
+                : "flex-end"
+              : "",
+        position: "relative",
       }}
-    />
+      onClick={() => {
+        if (selectedEdge == index) {
+          setSelectedEdge(null);
+        } else {
+          setSelectedEdge(index);
+        }
+        setSelectedNode(null);
+      }}
+    >
+      <span style={{ display: "inline-block", transform: "translateY(-15px)" }}>
+        {direction == "start_to_end"
+          ? leftNode == startNode
+            ? ">"
+            : "<"
+          : direction == "end_to_start"
+            ? leftNode == startNode
+              ? "<"
+              : ">"
+            : ""}
+      </span>
+      {direction == "bidirectional" && (
+        <>
+          <div
+            style={{ position: "absolute", top: "-15px", left: "32px" }}
+          >{`<`}</div>
+          <div
+            style={{ position: "absolute", top: "-15px", right: "32px" }}
+          >{`>`}</div>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -129,6 +245,7 @@ export default function Home() {
   const [nodes, setNodes] = useState([]);
   const [edges, setEdges] = useState([]);
   const [selectedNode, setSelectedNode] = useState(null);
+  const [selectedEdge, setSelectedEdge] = useState(null);
 
   return (
     <>
@@ -155,7 +272,7 @@ export default function Home() {
           style={{
             display: "grid",
             gridTemplateColumns: "2fr 1fr",
-            gap: "24px",
+            gap: "8px",
           }}
         >
           <div
@@ -168,18 +285,32 @@ export default function Home() {
               borderRadius: "8px",
             }}
           >
-            {nodes.map((node, index) => (
-              <Node
-                label={node.label}
-                index={index}
+            {nodes.map(
+              (node, index) =>
+                node != null && (
+                  <Node
+                    label={node.label}
+                    index={index}
+                    nodes={nodes}
+                    setNodes={setNodes}
+                    selectedNode={selectedNode}
+                    setSelectedNode={setSelectedNode}
+                    setSelectedEdge={setSelectedEdge}
+                  />
+                ),
+            )}
+            {edges.map((edge, index) => (
+              <Edge
                 nodes={nodes}
-                setNodes={setNodes}
-                selectedNode={selectedNode}
+                startNode={edge.start}
+                endNode={edge.end}
+                setEdges={setEdges}
+                selectedEdge={selectedEdge}
+                setSelectedEdge={setSelectedEdge}
                 setSelectedNode={setSelectedNode}
+                index={index}
+                direction={edge.direction || "undirected"}
               />
-            ))}
-            {edges.map((edge) => (
-              <Edge nodes={nodes} startNode={edge[0]} endNode={edge[1]} />
             ))}
             <div
               onClick={() =>
@@ -208,7 +339,11 @@ export default function Home() {
             </div>
           </div>
           <div
-            style={{ border: "2px solid black", borderRadius: "8px" }}
+            style={{
+              border: "2px solid black",
+              borderRadius: "8px",
+              width: "calc(40vw - 8px - 32px)",
+            }}
             className={ibmPlexMono.className}
           >
             <div
@@ -221,12 +356,54 @@ export default function Home() {
               }}
             >
               {selectedNode == null
-                ? "Select a node to edit..."
+                ? selectedEdge == null
+                  ? "Select a node or edge..."
+                  : `Edit Edge #${selectedEdge}`
                 : `Edit Node #${selectedNode}`}
             </div>
-            <div style={{ padding: "8px 16px", paddingBottom: "0px" }}>
-            <small><i>Select nodes to create edges to</i></small>
-            </div>
+            {selectedEdge != null && (
+              <select
+                style={{
+                  border: "1px solid black",
+                  height: "40px",
+                  width: "calc(40vw - 48px - 32px)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  margin: "16px",
+                  boxSizing: "border-box",
+                  padding: "8px",
+                }}
+                onChange={(event) =>
+                  setEdges(
+                    edges.map((e, i) =>
+                      i == selectedEdge
+                        ? { ...e, direction: event.target.value }
+                        : e,
+                    ),
+                  )
+                }
+                defaultValue={edges[selectedEdge].direction || "undirected"}
+              >
+                <option value="undirected">Undirected</option>
+                <option value="start_to_end">
+                  {nodes[edges[selectedEdge].start].label} to{" "}
+                  {nodes[edges[selectedEdge].end].label}
+                </option>
+                <option value="end_to_start">
+                  {nodes[edges[selectedEdge].end].label} to{" "}
+                  {nodes[edges[selectedEdge].start].label}
+                </option>
+                <option value="bidirectional">Bidirectional</option>
+              </select>
+            )}
+            {selectedNode != null && (
+              <div style={{ padding: "8px 16px", paddingBottom: "0px" }}>
+                <small>
+                  <i>Select nodes to create edges to</i>
+                </small>
+              </div>
+            )}
             <div
               style={{
                 display: "grid",
@@ -235,18 +412,16 @@ export default function Home() {
                 gap: "16px",
               }}
             >
-              {selectedNode == null ? (
-                <></>
-              ) : (
+              {selectedNode != null &&
                 nodes.map((node, index) => {
-                  if (index == selectedNode) {
-                    return <></> 
+                  if (index == selectedNode || node == null) {
+                    return <></>;
                   } else {
-                    let edge = []
-                    if(selectedNode > index) {
-                      edge = [index, selectedNode]
+                    let edge = [];
+                    if (selectedNode > index) {
+                      edge = { start: index, end: selectedNode };
                     } else {
-                      edge = [selectedNode, index]
+                      edge = { start: selectedNode, end: index };
                     }
                     return (
                       <div
@@ -258,23 +433,63 @@ export default function Home() {
                           alignItems: "center",
                           justifyContent: "center",
                           boxSizing: "border-box",
-                          background: edges.filter(e => e[0] == edge[0] && e[1] == edge[1]).length > 0 ? "#5bc0de" : "white",
+                          background:
+                            edges.filter(
+                              (e) => e.start == edge.start && e.end == edge.end,
+                            ).length > 0
+                              ? "#5bc0de"
+                              : "white",
                         }}
                         onClick={() => {
-                          if(edges.filter(e => e[0] == edge[0] && e[1] == edge[1]).length > 0) {
-                            setEdges(edges.filter(e => e[0] != edge[0] && e[1] != edge[1]))
+                          if (
+                            edges.filter(
+                              (e) => e.start == edge.start && e.end == edge.end,
+                            ).length > 0
+                          ) {
+                            setEdges(
+                              edges.filter(
+                                (e) =>
+                                  e.start != edge.start || e.end != edge.end,
+                              ),
+                            );
                           } else {
-                            setEdges([...edges, edge])
+                            setEdges([...edges, edge]);
                           }
                         }}
                       >
-                        {index}
+                        {nodes[index].label}
                       </div>
-                    )
+                    );
                   }
-                })
-              )}
+                })}
             </div>
+            {selectedNode != null && (
+              <div
+                onClick={() => {
+                  setNodes(
+                    nodes.map((n, index) => (index == selectedNode ? null : n)),
+                  );
+                  setEdges(
+                    edges.filter(
+                      (e) =>
+                        e.start != selectedNode && e[1].end != selectedNode,
+                    ),
+                  );
+                  setSelectedNode(null);
+                }}
+                style={{
+                  border: "1px solid black",
+                  height: "40px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  margin: "8px 16px",
+                  boxSizing: "border-box",
+                }}
+              >
+                Delete node
+              </div>
+            )}
           </div>
         </div>
       </div>
