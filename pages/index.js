@@ -55,8 +55,6 @@ function Node({
           alignItems: "center",
           justifyContent: "center",
           position: "absolute",
-          top: 8,
-          left: 8,
           background: "white",
           boxSizing: "border-box",
           border:
@@ -129,26 +127,8 @@ function Edge({ nodes, startNode, endNode }) {
 
 export default function Home() {
   const [nodes, setNodes] = useState([]);
-  const [edgeInput, setEdgeInput] = useState("");
+  const [edges, setEdges] = useState([]);
   const [selectedNode, setSelectedNode] = useState(null);
-
-  function edges() {
-    return edgeInput
-      .split("\n")
-      .map((edge) =>
-        edge
-          .trim()
-          .split(",")
-          .map((n) => n.trim()),
-      )
-      .filter(
-        (edge) =>
-          edge[0] &&
-          edge[1] &&
-          parseInt(edge[0]) < nodes.length &&
-          parseInt(edge[1]) < nodes.length,
-      );
-  }
 
   return (
     <>
@@ -198,7 +178,7 @@ export default function Home() {
                 setSelectedNode={setSelectedNode}
               />
             ))}
-            {edges().map((edge) => (
+            {edges.map((edge) => (
               <Edge nodes={nodes} startNode={edge[0]} endNode={edge[1]} />
             ))}
             <div
@@ -258,38 +238,41 @@ export default function Home() {
               {selectedNode == null ? (
                 <></>
               ) : (
-                nodes.map((node, index) => index == selectedNode ? <></> : (
-                  <div
-                    style={{
-                      border: "1px solid black",
-                      height: "40px",
-                      width: "40px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      boxSizing: "border-box",
-                      background: edgeInput.includes(`${index}, ${selectedNode}`) || edgeInput.includes(`${selectedNode}, ${index}`) ? "#5bc0de" : "white",
-                    }}
-                    onClick={() => {
-                      // THIS NEEDS TO BE REWRITTEN, THIS IS BAD, THIS SHOULD NOT BE STORED AS A STRING
-                      let replaced = false
-                      if(edgeInput.includes(`${selectedNode}, ${index}`)) {
-                        replaced = true
-                        setEdgeInput(edgeInput.replaceAll(`${selectedNode}, ${index}`, ""))
-                      }
-                      if(edgeInput.includes(`${index}, ${selectedNode}`)) {
-                        replaced = true
-                        setEdgeInput(edgeInput.replaceAll(`${index}, ${selectedNode}`, ""))
-                      }
-                      if(replaced == false) {
-                        setEdgeInput(edgeInput + '\n' + `${selectedNode}, ${index}`)
-                      }
-                      
-                    }}
-                  >
-                    {index}
-                  </div>
-                ))
+                nodes.map((node, index) => {
+                  if (index == selectedNode) {
+                    return <></> 
+                  } else {
+                    let edge = []
+                    if(selectedNode > index) {
+                      edge = [index, selectedNode]
+                    } else {
+                      edge = [selectedNode, index]
+                    }
+                    return (
+                      <div
+                        style={{
+                          border: "1px solid black",
+                          height: "40px",
+                          width: "40px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          boxSizing: "border-box",
+                          background: edges.filter(e => e[0] == edge[0] && e[1] == edge[1]).length > 0 ? "#5bc0de" : "white",
+                        }}
+                        onClick={() => {
+                          if(edges.filter(e => e[0] == edge[0] && e[1] == edge[1]).length > 0) {
+                            setEdges(edges.filter(e => e[0] != edge[0] && e[1] != edge[1]))
+                          } else {
+                            setEdges([...edges, edge])
+                          }
+                        }}
+                      >
+                        {index}
+                      </div>
+                    )
+                  }
+                })
               )}
             </div>
           </div>
