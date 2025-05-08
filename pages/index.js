@@ -2,6 +2,8 @@ import Head from "next/head";
 import Draggable from "react-draggable";
 import { useRef, useState } from "react";
 import { Old_Standard_TT, IBM_Plex_Mono } from "next/font/google";
+import { IconButton, Snackbar } from "@mui/material";
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 const oldStandardTT = Old_Standard_TT({
   subsets: ["latin"],
@@ -238,6 +240,91 @@ function Edge({
         </>
       )}
     </div>
+  );
+}
+
+function GeneratedCode({ nodes, edges, language }) {
+  // TODO be able to select Typst or Latex for language
+  // TODO errors when deleting nodes
+
+  const diagramCode = generateCode(nodes, edges, language);
+  const [open, setOpen] = useState(false);
+
+  function getTypstNodes(nodes) {
+    const scaleFactor = 100;
+    return nodes.map((node) => `node(pos: (${node.position[0] / scaleFactor}, ${node.position[1] / scaleFactor}), label: "${node.label}", name: <${node.label}>)`).join(",\n    ");
+  }
+
+  function getTypstDirectionString(edge) {
+    if (edge.direction === undefined) {
+      return "-";
+    }
+    // TODO assume that edges are "undirected" or "directed"
+    return edge.direction === "undirected" ? "-" : "->";
+  }
+
+  function getTypstEdges(nodes, edges) {
+    if (nodes.length == 0 || edges.length == 0) {
+      return "";
+    }
+    return edges.map((edge) => `edge(<${nodes[edge.start].label}>, <${nodes[edge.end].label}>, "${getTypstDirectionString(edge)}")`).join(",\n    ");
+  }
+
+  function generateCode(nodes, edges, language) {
+    if (nodes.length == 0 && edges.length == 0) {
+      return "No nodes or edges yet!";
+    }
+
+    if (language === "typst") {
+      let nodesString = getTypstNodes(nodes);
+      let edgesString = "";
+
+      if (nodesString !== "") {
+        edgesString = getTypstEdges(nodes, edges, false);
+      }
+
+      if (edgesString !== "") {
+        nodesString += ",\n";
+      }
+
+      return (
+        `#import "@preview/fletcher:0.5.7" as fletcher: diagram, node, edge\n` +
+        `#set page(width: auto, height: auto, margin: 5mm, fill: white)\n` +
+        `#diagram(\n` +
+        `    node-stroke: 0.5pt, // node circle thickness\n` +
+        `    ${nodesString}` +
+        `    ${edgesString}` +
+        `\n` +
+        `)`
+      );
+    } else {
+      return "Language not supported";
+    }
+  }
+
+  return (
+    <>
+    <div>
+      <IconButton
+        aria-label="copy"
+        onClick={() => {
+          navigator.clipboard.writeText(diagramCode);
+          setOpen(true);
+        }}
+        style={{ float: "right" }}
+      >
+        <ContentCopyIcon />
+      </IconButton>
+
+      <Snackbar
+        open={open}
+        autoHideDuration={1000} // autoclose in 1 sec
+        onClose={() => setOpen(false)}
+        message="Copied!"
+      />
+    </div>
+    {diagramCode}
+    </>
   );
 }
 
@@ -490,6 +577,22 @@ export default function Home() {
                 Delete node
               </div>
             )}
+          </div>
+          <div
+            className={ibmPlexMono.className}
+            style={{
+              gridColumnStart: 1,
+              gridColumnEnd: 3,
+              border: "2px solid black",
+              position: "relative",
+              borderRadius: "8px",
+              marginTop: "1em",
+              fontSize: "0.5em",
+              whiteSpace: "pre",
+              padding: "0.5em"
+            }}
+          >
+            <GeneratedCode nodes={nodes} edges={edges} language="typst" />
           </div>
         </div>
       </div>
