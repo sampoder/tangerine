@@ -2,6 +2,8 @@ import Head from "next/head";
 import Draggable from "react-draggable";
 import { useRef, useState } from "react";
 import { Old_Standard_TT, IBM_Plex_Mono } from "next/font/google";
+import { IconButton, Snackbar } from "@mui/material";
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 const oldStandardTT = Old_Standard_TT({
   subsets: ["latin"],
@@ -242,12 +244,11 @@ function Edge({
 }
 
 function GeneratedCode({ nodes, edges, language }) {
-  // TODO copy button?
-  // TODO language radio button or drop down?
-  // TODO deletion errors
+  // TODO be able to select Typst or Latex for language
+  // TODO errors when deleting nodes
 
-  console.log(nodes);
-  console.log(edges);
+  const diagramCode = generateCode(nodes, edges, language);
+  const [open, setOpen] = useState(false);
 
   function getTypstNodes(nodes) {
     const scaleFactor = 100;
@@ -303,7 +304,26 @@ function GeneratedCode({ nodes, edges, language }) {
 
   return (
     <>
-    {generateCode(nodes, edges, language)}
+    <div>
+      <IconButton
+        aria-label="copy"
+        onClick={() => {
+          navigator.clipboard.writeText(diagramCode);
+          setOpen(true);
+        }}
+        style={{ float: "right" }}
+      >
+        <ContentCopyIcon />
+      </IconButton>
+
+      <Snackbar
+        open={open}
+        autoHideDuration={1000} // autoclose in 1 sec
+        onClose={() => setOpen(false)}
+        message="Copied!"
+      />
+    </div>
+    {diagramCode}
     </>
   );
 }
