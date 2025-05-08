@@ -252,7 +252,7 @@ function GeneratedCode({ nodes, edges, language }) {
 
   function getTypstNodes(nodes) {
     const scaleFactor = 100;
-    return nodes.map((node) => `node(pos: (${node.position[0] / scaleFactor}, ${node.position[1] / scaleFactor}), label: "${node.label}", name: <${node.label}>)`).join(",\n    ");
+    return nodes.filter(node => node != null).map((node) => `node(pos: (${node.position[0] / scaleFactor}, ${node.position[1] / scaleFactor}), label: "${node.label}", name: <${node.label}>)`).join(",\n    ");
   }
 
   function getTypstDirectionString(edge) {
