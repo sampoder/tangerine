@@ -486,6 +486,26 @@ export default function Home() {
             )}
             {selectedNode != null && (
               <div style={{ padding: "8px 16px", paddingBottom: "0px" }}>
+                <div style={{ marginTop: "16px" }}>
+                  <label style={{ display: "block", marginBottom: "4px" }}>Label:</label>
+                  <input
+                    type="text"
+                    value={nodes[selectedNode].label}
+                    onChange={(e) => {
+                      const updatedNodes = nodes.map((n, i) =>
+                        i === selectedNode ? { ...n, label: e.target.value } : n
+                      );
+                      setNodes(updatedNodes);
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "8px",
+                      boxSizing: "border-box",
+                      fontSize: "1rem",
+                    }}
+                  />
+                </div>
+
                 <small>
                   <i>Select nodes to create edges to</i>
                 </small>
