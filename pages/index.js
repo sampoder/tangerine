@@ -86,6 +86,7 @@ function Edge({
   setSelectedNode,
   index,
   direction,
+  label
 }) {
   if (nodes[startNode].position[0] == nodes[endNode].position[0]) {
     let height = Math.abs(
@@ -154,6 +155,22 @@ function Edge({
               }}
             >{`>`}</div>
           </>
+        )}
+        {label && (
+          <div
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "-1.75em",
+              transform: "translateY(-50%)",
+              fontSize: "0.75rem",
+              background: "white",
+              padding: "1px 4px",
+              pointerEvents: "none"
+            }}
+          >
+            {label}
+          </div>
         )}
       </div>
     );
@@ -239,6 +256,22 @@ function Edge({
           >{`>`}</div>
         </>
       )}
+      {label && (
+        <div
+          style={{
+            position: "absolute",
+            top: "-1.25em",
+            left: "50%",
+            transform: "translateX(-50%)",
+            fontSize: "0.75rem",
+            background: "white",
+            padding: "1px 4px",
+            pointerEvents: "none"
+          }}
+        >
+          {label}
+        </div>
+      )}
     </div>
   );
 }
@@ -267,7 +300,13 @@ function GeneratedCode({ nodes, edges, language }) {
     if (nodes.length == 0 || edges.length == 0) {
       return "";
     }
-    return edges.map((edge) => `edge(<${nodes[edge.start].label}>, <${nodes[edge.end].label}>, "${getTypstDirectionString(edge)}")`).join(",\n    ");
+    return edges.map((edge) => {
+      const directionString = getTypstDirectionString(edge);  
+      const labelPart = edge.label && edge.label.trim() !== ""
+        ? `, label: "${edge.label}"`
+        : "";
+      return `edge(<${nodes[edge.start].label}>, <${nodes[edge.end].label}>, "${directionString}"${labelPart})`;
+    }).join(",\n    ");
   }
 
   function generateCode(nodes, edges, language) {
@@ -397,6 +436,7 @@ export default function Home() {
                 setSelectedNode={setSelectedNode}
                 index={index}
                 direction={edge.direction || "undirected"}
+                label={edge.label}
               />
             ))}
             <div
@@ -449,6 +489,7 @@ export default function Home() {
                 : `Edit Node #${selectedNode}`}
             </div>
             {selectedEdge != null && (
+               <>
               <select
                 style={{
                   border: "1px solid black",
@@ -483,8 +524,33 @@ export default function Home() {
                 </option>
                 <option value="bidirectional">Bidirectional</option>
               </select>
+              <div style={{ margin: "16px" }}>
+              <label style={{ display: "block", marginBottom: "4px", fontWeight: 600 }}>
+                Edge Label:
+              </label>
+              <input
+                type="text"
+                value={edges[selectedEdge]?.label || ""}
+                onChange={(e) => {
+                  const updatedEdges = edges.map((edge, i) =>
+                    i === selectedEdge ? { ...edge, label: e.target.value } : edge
+                  );
+                  setEdges(updatedEdges);
+                }}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  fontSize: "1rem",
+                  boxSizing: "border-box",
+                  border: "1px solid black",
+                  borderRadius: "4px",
+                }}
+              />
+            </div>
+            </>
             )}
             {selectedNode != null && (
+              //edit node label
               <div style={{ padding: "8px 16px", paddingBottom: "0px" }}>
                 <div style={{ marginTop: "16px" }}>
                   <label style={{ display: "block", marginBottom: "4px" }}>Label:</label>
@@ -505,7 +571,6 @@ export default function Home() {
                     }}
                   />
                 </div>
-
                 <small>
                   <i>Select nodes to create edges to</i>
                 </small>
@@ -560,7 +625,7 @@ export default function Home() {
                               ),
                             );
                           } else {
-                            setEdges([...edges, edge]);
+                            setEdges([...edges, { ...edge, label: "" }]);
                           }
                         }}
                       >
