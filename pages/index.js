@@ -489,7 +489,7 @@ export default function Home() {
                 : `Edit Node #${selectedNode}`}
             </div>
             {selectedEdge != null && (
-               <>
+              <>
               <select
                 style={{
                   border: "1px solid black",
@@ -502,15 +502,24 @@ export default function Home() {
                   boxSizing: "border-box",
                   padding: "8px",
                 }}
-                onChange={(event) =>
-                  setEdges(
-                    edges.map((e, i) =>
-                      i == selectedEdge
-                        ? { ...e, direction: event.target.value }
-                        : e,
-                    ),
-                  )
-                }
+                onChange={(event) => {
+                  const newDirection = event.target.value;
+                
+                  setEdges(edges.map((e, i) => {
+                    if (i !== selectedEdge) return e;
+                
+                    const start = e.start;
+                    const end = e.end;
+                
+                    if (newDirection === "start_to_end") {
+                      return { ...e, direction: newDirection, start, end };
+                    } else if (newDirection === "end_to_start") {
+                      return { ...e, direction: newDirection, start: end, end: start };
+                    } else {
+                      return { ...e, direction: newDirection };
+                    }
+                  }));
+                }}
                 defaultValue={edges[selectedEdge].direction || "undirected"}
               >
                 <option value="undirected">Undirected</option>
