@@ -301,7 +301,7 @@ function GeneratedCode({ nodes, edges, language }) {
       return "";
     }
     return edges.map((edge) => {
-      const directionString = getTypstDirectionString(edge);  
+      const directionString = getTypstDirectionString(edge);
       const labelPart = edge.label && edge.label.trim() !== ""
         ? `, label: "${edge.label}"`
         : "";
@@ -331,6 +331,7 @@ function GeneratedCode({ nodes, edges, language }) {
         `#set page(width: auto, height: auto, margin: 5mm, fill: white)\n` +
         `#diagram(\n` +
         `    node-stroke: 0.5pt, // node circle thickness\n` +
+        `    node-shape: "circle",\n` +
         `    ${nodesString}` +
         `    ${edgesString}` +
         `\n` +
@@ -504,13 +505,13 @@ export default function Home() {
                 }}
                 onChange={(event) => {
                   const newDirection = event.target.value;
-                
+
                   setEdges(edges.map((e, i) => {
                     if (i !== selectedEdge) return e;
-                
+
                     const start = e.start;
                     const end = e.end;
-                
+
                     if (newDirection === "start_to_end") {
                       return { ...e, direction: newDirection, start, end };
                     } else if (newDirection === "end_to_start") {
