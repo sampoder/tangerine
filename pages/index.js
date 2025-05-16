@@ -654,7 +654,7 @@ export default function Home() {
                   setEdges(
                     edges.filter(
                       (e) =>
-                        e.start != selectedNode && e[1].end != selectedNode,
+                        e.start != selectedNode && e.end != selectedNode,
                     ),
                   );
                   setSelectedNode(null);
