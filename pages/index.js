@@ -278,7 +278,6 @@ function Edge({
 
 function GeneratedCode({ nodes, edges, language }) {
   // TODO be able to select Typst or Latex for language
-  // TODO errors when deleting nodes
 
   const diagramCode = generateCode(nodes, edges, language);
   const [open, setOpen] = useState(false);
@@ -289,11 +288,16 @@ function GeneratedCode({ nodes, edges, language }) {
   }
 
   function getTypstDirectionString(edge) {
-    if (edge.direction === undefined) {
+    if (edge.direction === undefined || edge.direction === "undirected") {
       return "-";
+    } else if (edge.direction === "bidirectional") {
+      return "<->";
+    } else if (edge.direction === "start_to_end") {
+      return "->";
+    } else if (edge.direction === "end_to_start") {
+      return "<-";
     }
-    // TODO assume that edges are "undirected" or "directed"
-    return edge.direction === "undirected" ? "-" : "->";
+    throw `Invalid edge direction value: ${edge.direction}`;
   }
 
   function getTypstEdges(nodes, edges) {
